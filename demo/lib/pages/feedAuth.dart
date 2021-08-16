@@ -1,25 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:demo/models/user.dart';
-// import 'package:demo/pages/home.dart';
+// import 'package:demo/models/user.dart';
+// import 'package:demo/pages/newhome.dart';
 import 'package:demo/widgets/header.dart';
-import 'package:demo/widgets/post.dart';
+import 'package:demo/widgets/postAuth.dart';
 import 'package:demo/widgets/progress.dart';
 
 final userRef = FirebaseFirestore.instance.collection('users');
 final postRef = FirebaseFirestore.instance.collection('posts');
 
-class Feed extends StatefulWidget {
-  final Uuser currentUser;
+class FeedAuth extends StatefulWidget {
+  // final Uuser currentUser;
+  final String currentUserId;
 
-  Feed({this.currentUser});
+  FeedAuth({this.currentUserId});
 
   @override
-  _FeedState createState() => _FeedState();
+  _FeedAuthState createState() => _FeedAuthState();
 }
 
-class _FeedState extends State<Feed> {
-  List<Post> posts;
+class _FeedAuthState extends State<FeedAuth> {
+  List<PostAuth> posts;
 
   @override
   void initState() {
@@ -28,11 +29,10 @@ class _FeedState extends State<Feed> {
   }
 
   getTimeline() async {
-    print("Logged in via Google Authenticate");
-    print("Post is being fetched in Timeline");
+    print("Post is being showed in Timeline");
     QuerySnapshot snapshot = await postRef.get();
-    List<Post> posts =
-        snapshot.docs.map((doc) => Post.fromDocument(doc)).toList();
+    List<PostAuth> posts =
+        snapshot.docs.map((doc) => PostAuth.fromDocument(doc)).toList();
     setState(() {
       this.posts = posts;
     });
@@ -44,7 +44,7 @@ class _FeedState extends State<Feed> {
     } else if (posts.isEmpty) {
       return Text("No posts");
     } else {
-      print("Post is being showed in Timeline");
+      print("Post is being fetched in Timeline");
       return ListView(children: posts);
     }
   }

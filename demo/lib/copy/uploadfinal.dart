@@ -14,7 +14,7 @@
 // import 'package:uuid/uuid.dart';
 
 // class Upload extends StatefulWidget {
-  // final User currentUser;
+//   final User currentUser;
 
 //   Upload({this.currentUser});
 

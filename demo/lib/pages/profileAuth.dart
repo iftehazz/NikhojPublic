@@ -3,23 +3,23 @@ import 'package:demo/pages/home.dart';
 import 'package:demo/pages/edit_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:demo/widgets/progress.dart';
-import 'package:demo/widgets/post.dart';
+import 'package:demo/widgets/postAuth.dart';
 import 'package:demo/models/user.dart';
 import 'package:demo/widgets/header.dart';
 
-class Profile extends StatefulWidget {
+class ProfileAuth extends StatefulWidget {
   final String profileId;
 
-  Profile({this.profileId});
+  ProfileAuth({this.profileId});
 
   @override
-  _ProfileState createState() => _ProfileState();
+  _ProfileAuthState createState() => _ProfileAuthState();
 }
 
-class _ProfileState extends State<Profile> {
-  final String currentUserId = currentUser?.id;
+class _ProfileAuthState extends State<ProfileAuth> {
+  final String currentUserId = auth.currentUser.uid;
   final postRef = FirebaseFirestore.instance.collection('posts');
-  Post post;
+  PostAuth post;
   bool isLoading = false;
   @override
   void initState() {
@@ -33,8 +33,7 @@ class _ProfileState extends State<Profile> {
       isLoading = true;
     });
     DocumentSnapshot snapshot = await postRef.doc(widget.profileId).get();
-    post = Post.fromDocument(snapshot);
-
+    post = PostAuth.fromDocument(snapshot);
     setState(() {
       print("Post is fetched from Firebase");
       isLoading = false;
@@ -42,6 +41,7 @@ class _ProfileState extends State<Profile> {
   }
 
   editProfile() {
+    print("Edit post is clicked");
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -84,9 +84,11 @@ class _ProfileState extends State<Profile> {
   }
 
   logout() async {
+    print("Logout button is clicked");
     await googleSignIn.signOut();
     await auth.signOut();
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+    print("logout completed");
+    Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
   }
 
   buildProfileHeader() {
@@ -124,7 +126,6 @@ class _ProfileState extends State<Profile> {
                             buildProfileButton(),
                           ],
                         ),
-                      
                         Padding(
                           padding: EdgeInsets.all(1.0),
                           child: TextButton.icon(
@@ -137,7 +138,6 @@ class _ProfileState extends State<Profile> {
                             ),
                           ),
                         ),
-                      
                       ],
                     ),
                   ),
@@ -154,6 +154,7 @@ class _ProfileState extends State<Profile> {
     if (isLoading) {
       return circularProgress();
     }
+    print("Post is fetched");
     return post;
   }
 

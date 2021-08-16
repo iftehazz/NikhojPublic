@@ -1,17 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:demo/pages/create_account.dart';
+import 'package:demo/pages/newhome.dart';
 import 'package:demo/pages/profile.dart';
 import 'package:demo/pages/search.dart';
 import 'package:demo/pages/upload.dart';
+import 'package:demo/pages/verify.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 //import 'activity_feed.dart';
 import 'feed.dart';
+import 'verify.dart';
+import 'package:demo/models/user.dart';
 
 final GoogleSignIn googleSignIn = GoogleSignIn();
+final auth = FirebaseAuth.instance;
 final userRef = FirebaseFirestore.instance.collection('users');
 final DateTime timestamp = DateTime.now();
+Uuser currentUser;
 
 class Home extends StatefulWidget {
   @override
@@ -24,7 +31,7 @@ class _HomeState extends State<Home> {
   int pageIndex = 0;
 
   String _email, _password;
-  final auth = FirebaseAuth.instance;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   //final _formkey = GlobalKey<FormState>();
 
   @override
@@ -62,14 +69,22 @@ class _HomeState extends State<Home> {
 
   createUserInFirestore() async {
     final GoogleSignInAccount user = googleSignIn.currentUser;
-    final DocumentSnapshot doc = await userRef.doc(user.id).get();
+    DocumentSnapshot doc = await userRef.doc(user.id).get();
     if (!doc.exists) {
+      final username = await Navigator.push(
+          context, MaterialPageRoute(builder: (context) => CreateAccount()));
+
       userRef.doc(user.id).set({
         "id": user.id,
+        "username": username,
         "email": user.email,
         "timestamp": timestamp,
       });
+      doc = await userRef.doc(user.id).get();
+      print("User is created in firestore");
     }
+    currentUser = Uuser.fromDocument(doc);
+    
   }
 
   @override
@@ -104,11 +119,11 @@ class _HomeState extends State<Home> {
     return Scaffold(
       body: PageView(
         children: <Widget>[
-          Feed(),
+          Feed(currentUser: currentUser),
           // ActivityFeed(),
-          Upload(),
+          Upload(currentUser: currentUser),
           Search(),
-          Profile(),
+          Profile(profileId: currentUser?.id),
         ],
         controller: pageController,
         onPageChanged: onPageChanged,
@@ -138,115 +153,11 @@ class _HomeState extends State<Home> {
         ],
       ),
     );
-    // return ElevatedButton(
-    //   child: Text('Logout'),
-    //   onPressed: logout,
-    // );
   }
-
-  // Scaffold buildUnAuthScreen() {
-  //   return Scaffold(
-  //     appBar: AppBar(
-  //       title: Text('Login'),
-  //     ),
-  //     resizeToAvoidBottomInset: false,
-  //     body: Column(
-  //       children: [
-  //         Padding(
-  //           padding: const EdgeInsets.all(8.0),
-  //           child: TextField(
-  //             keyboardType: TextInputType.emailAddress,
-  //             decoration: InputDecoration(hintText: 'Email'),
-  //             onChanged: (value) {
-  //               setState(() {
-  //                 _email = value.trim();
-  //               });
-  //             },
-  //           ),
-  //         ),
-  //         Padding(
-  //           padding: const EdgeInsets.all(8.0),
-  //           child: TextField(
-  //             obscureText: true,
-  //             decoration: InputDecoration(hintText: 'Password'),
-  //             onChanged: (value) {
-  //               setState(() {
-  //                 _password = value.trim();
-  //               });
-  //             },
-  //           ),
-  //         ),
-  //         /////////////////////////////////////////////////////////////////////////
-  //         // Padding(
-  //         //   padding: const EdgeInsets.all(8.0),
-  //         //   child: Column(
-  //         //       mainAxisAlignment: MainAxisAlignment.center,
-  //         //       crossAxisAlignment: CrossAxisAlignment.center,
-  //         //       children: <Widget>[
-  //         //         Text(
-  //         //           'Nikhoj',
-  //         //           style: TextStyle(
-  //         //             fontFamily: "Signatra",
-  //         //             fontSize: 90.0,
-  //         //             color: Colors.white,
-  //         //           ),
-  //         //         ),
-  //         //         GestureDetector(
-  //         //           onTap: login,
-  //         //           child: Container(
-  //         //             width: 260.0,
-  //         //             height: 60.0,
-  //         //             decoration: BoxDecoration(
-  //         //                 image: DecorationImage(
-  //         //               image: AssetImage(
-  //         //                   'assets/images/google_signin_button.png'),
-  //         //               fit: BoxFit.cover,
-  //         //             )),
-  //         //           ),
-  //         //         )
-  //         //       ]),
-  //         // ),
-  //         ////////////////////////////////////////////
-  //         Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-  //           RaisedButton(
-  //               color: Theme.of(context).accentColor,
-  //               child: Text('Signin'),
-  //               onPressed: () {
-  //                 auth
-  //                     .signInWithEmailAndPassword(
-  //                         email: _email, password: _password)
-  //                     .then((_) {
-  //                   Navigator.of(context).pushReplacement(MaterialPageRoute(
-  //                       builder: (context) => buildAuthScreen()));
-  //                 });
-  //               }),
-  //           RaisedButton(
-  //             color: Theme.of(context).accentColor,
-  //             child: Text('Signup'),
-  //             onPressed: () {
-  //               auth
-  //                   .createUserWithEmailAndPassword(
-  //                       email: _email, password: _password)
-  //                   .then((_) {
-  //                 Navigator.of(context).pushReplacement(
-  //                     MaterialPageRoute(builder: (context) => Home()));
-  //               });
-  //             },
-  //           ),
-
-  //           /////////////
-
-  //           ///////////////
-  //         ])
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  /////////////////////////2nd  build un auth screnn//////////////////////////////////////////////
 
   Scaffold buildUnAuthScreen() {
     return Scaffold(
+      key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
       body: Column(
         children: <Widget>[
@@ -274,6 +185,7 @@ class _HomeState extends State<Home> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                     //hintText: 'Password'
+                    border: OutlineInputBorder(),
                     labelText: "Email",
                     labelStyle: TextStyle(
                       color: Colors.black,
@@ -284,6 +196,7 @@ class _HomeState extends State<Home> {
                 onChanged: (value) {
                   setState(() {
                     _email = value.trim();
+                    print("email is being typed");
                   });
                 },
               ),
@@ -292,10 +205,11 @@ class _HomeState extends State<Home> {
           Container(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: TextField(
+              child: TextFormField(
                 obscureText: true,
                 decoration: InputDecoration(
-                    //hintText: 'Password'
+                    hintText: 'Must be at least 6 character',
+                    border: OutlineInputBorder(),
                     labelText: "Password",
                     labelStyle: TextStyle(
                       color: Colors.black,
@@ -303,9 +217,20 @@ class _HomeState extends State<Home> {
                     ),
                     focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey))),
+                autovalidate: true,
+                validator: (value) {
+                  if (value.trim().length < 6 || value.isEmpty) {
+                    print("password is too short, at least 6 character");
+                    return "password too short";
+                  } else {
+                    print("password is okay");
+                    return null;
+                  }
+                },
                 onChanged: (value) {
                   setState(() {
                     _password = value.trim();
+                    print("password is being typed");
                   });
                 },
               ),
@@ -324,8 +249,12 @@ class _HomeState extends State<Home> {
                           email: _email, password: _password)
                       .then((_) {
                     Navigator.of(context).pushReplacement(MaterialPageRoute(
-                        builder: (context) => buildAuthScreen()));
-                  });
+                        builder: (context) => NewHome()));
+                        print("Sign in done");
+                  }).catchError((e) {    SnackBar snackbar = SnackBar(content: Text("Email or Password is Wrong"));
+    _scaffoldKey.currentState.showSnackBar(snackbar);
+    print("snackbar is being used to show email or password is wrong");
+    });
                 }),
           ),
 
@@ -339,8 +268,13 @@ class _HomeState extends State<Home> {
                       .createUserWithEmailAndPassword(
                           email: _email, password: _password)
                       .then((_) {
-                    Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => Home()));
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (context) => VerifyScreen()));
+                        print("Sign up form is done heading to email verification");
+                  }).catchError((e){
+                    print(e);
+                    print("Error occured");
+
                   });
                 }),
           ),

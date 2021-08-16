@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:demo/pages/newhome.dart';
 import 'package:demo/widgets/progress.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,23 +9,21 @@ import 'package:image/image.dart' as Im;
 import 'package:uuid/uuid.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:demo/models/user.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:timeago/timeago.dart' as timeago;
+import 'package:firebase_auth/firebase_auth.dart';
 
 final postsRef = FirebaseFirestore.instance.collection('posts');
-// final upostsRef = FirebaseFirestore.instance.collection('uposts');
-// final DateTime timestamp = DateTime.now();
+final auth = FirebaseAuth.instance;
+final String currentUserId = auth.currentUser.uid;
 
-class Upload extends StatefulWidget {
-  final Uuser currentUser;
-  // final aUser = FirebaseAuth.instance.currentUser;
-  Upload({this.currentUser});
+class UploadAuth extends StatefulWidget {
+  final String currentUserId;
+  UploadAuth({this.currentUserId});
 
   @override
-  _UploadState createState() => _UploadState();
+  _UploadAuthState createState() => _UploadAuthState();
 }
 
-class _UploadState extends State<Upload> {
+class _UploadAuthState extends State<UploadAuth> {
   TextEditingController nameController = TextEditingController();
   TextEditingController ageController = TextEditingController();
   TextEditingController contactnumberController = TextEditingController();
@@ -145,10 +144,13 @@ class _UploadState extends State<Upload> {
       String name,
       String age,
       String contact,
-      String location}) {
-    postsRef.doc(widget.currentUser.id).set({
-      "ownerId": widget.currentUser.id,
-      "ownerName": widget.currentUser.username,
+      String location}) async {
+    DocumentSnapshot doc = await userRef.doc(widget.currentUserId).get();
+    Uuser user = Uuser.fromDocument(doc);
+
+    postsRef.doc(currentUserId).set({
+      "ownerId": currentUserId,
+      "ownerName": user.username,
       "mediaUrl": mediaUrl,
       "postId": postId,
       "name": name,
@@ -205,6 +207,7 @@ class _UploadState extends State<Upload> {
         ),
         actions: [
           TextButton(
+            // onPressed: () => isUploading ? null : () => handleSubmit(),
             onPressed: () => handleSubmit(),
             child: Text(
               "Post",
@@ -241,7 +244,12 @@ class _UploadState extends State<Upload> {
             padding: EdgeInsets.only(top: 10.0),
           ),
           ListTile(
-            leading: Icon(
+            leading:
+                // CircleAvatar(
+                //   backgroundImage:
+                //       CachedNetworkImageProvider(),
+                // ),
+                Icon(
               Icons.people_alt_sharp,
               color: Colors.orange,
               size: 35.0,

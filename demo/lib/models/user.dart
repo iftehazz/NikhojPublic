@@ -1,19 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-class User {
+class Uuser {
   final String id;
-  final String name;
-  final String age;
-  final String location;
+  final String username;
+  final String email;
 
-  User({this.id, this.name, this.age, this.location});
+  Uuser({this.id, this.username,this.email});
 
-  factory User.fromDocument(DocumentSnapshot doc){
-    return User(
+  factory Uuser.fromDocument(DocumentSnapshot doc){
+    return Uuser(
       id: doc['id'],
-      name: doc['name'],
-      age: doc['age'],
-      location: doc['location']
-
+      username: doc['username'],
+      email: doc['email'],
     );
 
   }
