@@ -1,2 +1,2 @@
 # NikhojPublic
-Mobile app using flutter and firebase to find out missing persons
+Mobile app using Flutter and Firebase to find out missing persons
